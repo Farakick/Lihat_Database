@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>📊 Data Arie Loundry</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #4a90e2;
+            --primary-dark: #2c6db5;
+            --primary-light: #e8f1fb;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #1a2332;
+            --muted: #7a8999;
+            --border: #dde3ea;
+            --success: #27ae60;
+            --success-light: #e8f8ef;
+            --danger: #e74c3c;
+            --danger-light: #fdecea;
+            --warning: #f39c12;
+            --warning-light: #fefbf3;
+            --shadow: 0 2px 12px rgba(74,144,226,0.10);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 18px 16px 14px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(44,109,181,0.25);
+        }
+        .app-header h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.2px; }
+        .app-header p  { font-size: 12px; opacity: 0.82; margin-top: 2px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; }
+        .btn-refresh {
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: white; padding: 7px 14px; border-radius: 20px;
+            font-size: 12px; cursor: pointer; font-weight: 600;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-refresh:active { background: rgba(255,255,255,0.30); }
+        .btn-refresh:disabled { opacity: 0.5; }
+
+        /* ===== TABS ===== */
+        .tabs-wrap {
+            background: var(--card);
+            border-bottom: 1.5px solid var(--border);
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; position: sticky; top: 72px; z-index: 90;
+        }
+        .tabs-wrap::-webkit-scrollbar { display: none; }
+        .tabs { display: flex; min-width: max-content; padding: 0 8px; }
+        .tab-btn {
+            padding: 12px 16px; border: none; background: transparent;
+            font-size: 13px; font-weight: 600; color: var(--muted);
+            cursor: pointer; border-bottom: 3px solid transparent;
+            white-space: nowrap; transition: all 0.2s;
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn .badge {
+            display: inline-block; background: var(--primary-light);
+            color: var(--primary); font-size: 10px; padding: 1px 6px;
+            border-radius: 10px; margin-left: 4px; font-weight: 700;
+        }
+        .tab-btn.active .badge { background: var(--primary); color: white; }
+
+        /* ===== MAIN ===== */
+        .main-content { padding: 12px; max-width: 600px; margin: 0 auto; }
+
+        /* ===== STAT CARDS ===== */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .stat-card {
+            background: var(--card); border-radius: 12px; padding: 14px 12px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+        .stat-card .label {
+            font-size: 11px; color: var(--muted); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .stat-card .value { font-size: 18px; font-weight: 800; color: var(--primary); margin-top: 4px; line-height: 1; }
+        .stat-card .value.green  { color: var(--success); }
+        .stat-card .value.orange { color: var(--warning); }
+
+        /* ===== SEARCH ===== */
+        .search-box { position: relative; margin-bottom: 12px; }
+        .search-box input {
+            width: 100%; padding: 11px 16px 11px 40px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 14px; background: var(--card); color: var(--text);
+            outline: none; transition: border 0.2s;
+        }
+        .search-box input:focus { border-color: var(--primary); }
+        .search-box .icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%); font-size: 16px; pointer-events: none;
+        }
+
+        /* ===== KARTU TRANSAKSI ===== */
+        .trx-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .trx-card {
+            background: var(--card); border-radius: 12px;
+            border: 1px solid var(--border); box-shadow: var(--shadow);
+            overflow: hidden; transition: box-shadow 0.15s;
+        }
+
+        /* Header kartu — bisa di-tap */
+        .trx-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 13px 14px; cursor: pointer; user-select: none;
+            gap: 8px; transition: background 0.15s;
+        }
+        .trx-card-header:active { background: #f7f9fc; }
+
+        .trx-left { flex: 1; min-width: 0; }
+        .trx-nama { font-size: 15px; font-weight: 700; color: var(--text); }
+        .trx-sub  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+        .trx-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+        /* Harga sekilas di header */
+        .trx-harga-header {
+            font-size: 14px; font-weight: 800; white-space: nowrap;
+        }
+        .trx-harga-header.normal  { color: var(--primary); }
+        .trx-harga-header.kurang  { color: var(--danger); }
+        .trx-harga-header.sisa-dp { color: var(--primary); }
+
+        /* Badge status di header */
+        .status-badge {
+            font-size: 10px; font-weight: 700; padding: 3px 8px;
+            border-radius: 20px; white-space: nowrap;
+        }
+        .status-badge.lunas   { background: var(--success-light); color: var(--success); }
+        .status-badge.kurang  { background: var(--danger-light);  color: var(--danger); }
+        .status-badge.sisa-dp { background: var(--primary-light); color: var(--primary-dark); }
+        .status-badge.normal  { background: #f0f4f8; color: var(--muted); }
+
+        /* Chevron expand/collapse */
+        .chevron {
+            width: 20px; height: 20px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted); transition: transform 0.25s;
+        }
+        .chevron svg { width: 14px; height: 14px; }
+        .trx-card.open .chevron { transform: rotate(180deg); }
+
+        /* Panel detail — hidden by default */
+        .trx-detail {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.2s;
+            border-top: 0px solid var(--border);
+        }
+        .trx-card.open .trx-detail {
+            max-height: 600px;
+            border-top: 1px solid var(--border);
+        }
+        .trx-detail-inner { padding: 12px 14px 14px; }
+
+        /* Tabel rincian */
+        .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .detail-table td {
+            padding: 5px 0; font-size: 13px; vertical-align: top;
+            border-bottom: 1px dashed var(--border);
+        }
+        .detail-table td:first-child { color: var(--muted); width: 42%; padding-right: 8px; }
+        .detail-table td:last-child  { font-weight: 600; color: var(--text); text-align: right; }
+        .detail-table tr:last-child td { border-bottom: none; }
+
+        /* Baris total & sisa deposit — diperbesar */
+        .detail-total td { font-size: 14px !important; font-weight: 800 !important; }
+        .detail-total td:first-child { color: var(--text) !important; }
+
+        /* Box status deposit */
+        .deposit-box {
+            border-radius: 10px; padding: 11px 14px; margin-top: 4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .deposit-box.sisa-dp  { background: var(--primary-light); }
+        .deposit-box.kurang   { background: var(--danger-light); }
+        .deposit-box.lunas    { background: var(--success-light); }
+        .deposit-box .db-icon { font-size: 22px; flex-shrink: 0; }
+        .deposit-box .db-text { flex: 1; }
+        .deposit-box .db-label{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .deposit-box .db-amount{ font-size: 17px; font-weight: 800; margin-top: 1px; }
+        .deposit-box.sisa-dp .db-label  { color: var(--primary-dark); }
+        .deposit-box.sisa-dp .db-amount { color: var(--primary); }
+        .deposit-box.kurang  .db-label  { color: var(--danger); }
+        .deposit-box.kurang  .db-amount { color: var(--danger); }
+        .deposit-box.lunas   .db-label  { color: var(--success); }
+        .deposit-box.lunas   .db-amount { color: var(--success); }
+
+        /* Chip layanan */
+        .chip {
+            display: inline-block; background: var(--primary-light);
+            color: var(--primary-dark); font-size: 11px; padding: 3px 9px;
+            border-radius: 20px; font-weight: 600; margin: 2px 2px 0 0;
+        }
+
+        /* Catatan */
+        .trx-note {
+            font-size: 12px; color: #8a6000; margin-top: 10px;
+            background: var(--warning-light); padding: 7px 10px;
+            border-radius: 7px; border-left: 3px solid var(--warning);
+        }
+
+        /* ===== EMPTY / LOADING ===== */
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .loading-spinner {
+            display: flex; justify-content: center; align-items: center;
+            padding: 60px 20px; gap: 10px; color: var(--muted); font-size: 14px;
+        }
+        .spinner {
+            width: 22px; height: 22px;
+            border: 3px solid var(--border); border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== ERROR / SETUP ===== */
+        .error-box {
+            background: var(--danger-light); border: 1px solid #f5c6c2;
+            border-radius: 10px; padding: 16px; text-align: center; margin: 20px 0;
+        }
+        .error-box p     { color: var(--danger); font-size: 13px; }
+        .error-box small { color: var(--muted); font-size: 11px; display: block; margin-top: 4px; }
+        .setup-card {
+            background: var(--card); border: 2px dashed var(--primary);
+            border-radius: 12px; padding: 20px; margin: 16px 0;
+        }
+        .setup-card h3 { color: var(--primary); font-size: 14px; margin-bottom: 10px; }
+        .setup-card ol { padding-left: 18px; }
+        .setup-card li { font-size: 13px; margin-bottom: 6px; color: var(--text); line-height: 1.4; }
+        .setup-card code {
+            background: var(--bg); padding: 2px 6px; border-radius: 4px;
+            font-size: 12px; font-family: monospace; color: var(--primary-dark); word-break: break-all;
+        }
+        .setup-card .warning {
+            background: var(--warning-light); border-left: 3px solid var(--warning);
+            padding: 8px 10px; border-radius: 4px; font-size: 12px;
+            color: #8a6000; margin-top: 12px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer-info { text-align: center; padding: 20px 16px; font-size: 11px; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="header-row">
+        <div>
+            <h1>🧺 Data Arie Loundry</h1>
+            <p id="headerSubtitle">Memuat data...</p>
+        </div>
+        <button class="btn-refresh" id="btnRefresh" onclick="muatUlangData()">🔄 Muat Ulang</button>
+    </div>
+</div>
+
+<div class="tabs-wrap" id="tabsWrap" style="display:none;">
+    <div class="tabs" id="tabsContainer"></div>
+</div>
+
+<div class="main-content" id="mainContent">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <span>Mengambil data...</span>
+    </div>
+</div>
+
+<div class="footer-info" id="footerInfo" style="display:none;">
+    <p>Terakhir diperbarui: <span id="lastUpdate">-</span></p>
+</div>
+
+<script>
+    // ============================================================
+    //  ⚙️  KONFIGURASI — GANTI URL DI BAWAH INI
+    // ============================================================
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwt-ySg3pW9CWH4cqFcp83CVVOf4oEDo8MPOI-o6SqpfWO6aN__uKkz3L2VEz1U6upc0Q/exec';
+    // ============================================================
+
+    // Kolom: A=0 Waktu, B=1 Nama, C=2 Layanan, D=3 Qty,
+    //        E=4 Total Harga, F=5 Deposit, G=6 Sisa Bayar, H=7 Catatan
+    const COL = { waktu:0, nama:1, layanan:2, qty:3, total:4, deposit:5, sisa:6, catatan:7 };
+
+    let semuaData  = {};
+    let bulanAktif = '';
+    let querySearch = '';
+    let expandedCards = new Set(); // simpan id kartu yang sedang terbuka
+
+    const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                        'Juli','Agustus','September','Oktober','November','Desember'];
+
+    // ===== FORMAT =====
+    function formatRupiah(n) {
+        return new Intl.NumberFormat('id-ID', {
+            style:'currency', currency:'IDR', minimumFractionDigits:0
+        }).format(n || 0);
+    }
+    function formatTanggal(str) {
+        if (!str) return '-';
+        const d = new Date(str);
+        if (isNaN(d)) return str;
+        return d.toLocaleDateString('id-ID', {
+            day:'2-digit', month:'short', year:'numeric',
+            hour:'2-digit', minute:'2-digit'
+        });
+    }
+
+    // ===== TOGGLE EXPAND KARTU =====
+    function toggleKartu(id) {
+        const card = document.getElementById(id);
+        if (!card) return;
+        if (expandedCards.has(id)) {
+            expandedCards.delete(id);
+            card.classList.remove('open');
+        } else {
+            expandedCards.add(id);
+            card.classList.add('open');
+        }
+    }
+
+    // ===== MUAT DATA =====
+    async function muatUlangData() {
+        const btn = document.getElementById('btnRefresh');
+        btn.disabled = true; btn.textContent = '⏳ Memuat...';
+        document.getElementById('mainContent').innerHTML =
+            `<div class="loading-spinner"><div class="spinner"></div><span>Mengambil data...</span></div>`;
+        document.getElementById('tabsWrap').style.display = 'none';
+        document.getElementById('footerInfo').style.display = 'none';
+        document.getElementById('headerSubtitle').textContent = 'Memuat data...';
+        expandedCards.clear();
+
+        try {
+            const url = GOOGLE_SCRIPT_URL + '?action=getData&t=' + Date.now();
+            const resp = await fetch(url);
+            const json = await resp.json();
+            if (json.status === 'ok' && json.sheets) {
+                semuaData = json.sheets;
+                inisialisasiTabs();
+            } else {
+                tampilkanError('Data tidak dikenali dari server.', JSON.stringify(json));
+            }
+        } catch (e) {
+            tampilkanError('Gagal terhubung ke server.', e.message);
+        }
+
+        btn.disabled = false; btn.textContent = '🔄 Muat Ulang';
+    }
+
+    // ===== TABS =====
+    function inisialisasiTabs() {
+        const sheetNames = Object.keys(semuaData);
+        if (!sheetNames.length) {
+            tampilkanError('Tidak ada data sheet.', 'Pastikan Google Script sudah dikonfigurasi.');
+            return;
+        }
+        sheetNames.sort((a,b) => parseSheetName(b) - parseSheetName(a));
+
+        const cont = document.getElementById('tabsContainer');
+        cont.innerHTML = '';
+        sheetNames.forEach((name, i) => {
+            const jml = semuaData[name].length;
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+            btn.innerHTML = `${name} <span class="badge">${jml}</span>`;
+            btn.onclick = () => pilihBulan(name);
+            cont.appendChild(btn);
+        });
+
+        document.getElementById('tabsWrap').style.display = 'block';
+        document.getElementById('footerInfo').style.display = 'block';
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleString('id-ID');
+        pilihBulan(sheetNames[0]);
+    }
+
+    function parseSheetName(name) {
+        const parts = name.split(/[\s\-\/]/);
+        let bulan = 0, tahun = 0;
+        parts.forEach(p => {
+            const n = parseInt(p);
+            if (!isNaN(n) && n > 1000) tahun = n;
+            const bi = NAMA_BULAN.findIndex(b => b.toLowerCase().startsWith(p.toLowerCase().slice(0,3)));
+            if (bi >= 0) bulan = bi;
+        });
+        return tahun * 100 + bulan;
+    }
+
+    function pilihBulan(nama) {
+        bulanAktif = nama;
+        querySearch = '';
+        expandedCards.clear();
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim().startsWith(nama));
+        });
+        const activeBtn = Array.from(document.querySelectorAll('.tab-btn'))
+            .find(b => b.textContent.trim().startsWith(nama));
+        if (activeBtn) activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+        renderHalaman();
+    }
+
+    // ===== RENDER HALAMAN =====
+    function renderHalaman() {
+        const rows = semuaData[bulanAktif] || [];
+        const mainContent = document.getElementById('mainContent');
+
+        // Search: multi-kata (spasi = AND), cek semua kolom sebagai string
+        const filtered = querySearch.trim()
+            ? (() => {
+                const kata = querySearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+                return rows.filter(r => {
+                    const gabung = r.map(v => (v||'').toString().toLowerCase()).join(' ');
+                    return kata.every(k => gabung.includes(k));
+                });
+              })()
+            : rows;
+
+        const totalTrx   = filtered.length;
+        const totalOmset = filtered.reduce((s,r) => s + (parseFloat(r[COL.total])   || 0), 0);
+        const totalSisa  = filtered.reduce((s,r) => s + (parseFloat(r[COL.sisa])    || 0), 0);
+        const totalDP    = filtered.reduce((s,r) => s + (parseFloat(r[COL.deposit]) || 0), 0);
+
+        document.getElementById('headerSubtitle').textContent = `${bulanAktif} · ${totalTrx} transaksi`;
+
+        let html = `
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="label">Total Transaksi</div>
+                <div class="value">${totalTrx}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Omset Kotor</div>
+                <div class="value" style="font-size:13px;">${formatRupiah(totalOmset)}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Sisa Bayar</div>
+                <div class="value green" style="font-size:12px;">${formatRupiah(totalSisa)}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total DP Masuk</div>
+                <div class="value orange" style="font-size:12px;">${formatRupiah(totalDP)}</div>
+            </div>
+        </div>
+        <div class="search-box">
+            <span class="icon">🔍</span>
+            <input type="text" placeholder="Cari nama atau layanan..."
+                value="${querySearch}"
+                oninput="debounceSearch(this.value)"
+                autocomplete="off">
+        </div>`;
+
+        if (filtered.length === 0) {
+            html += `<div class="empty-state">
+                <div class="icon">📭</div>
+                <p>${querySearch ? 'Tidak ada hasil untuk "<b>'+querySearch+'</b>"' : 'Belum ada data bulan ini.'}</p>
+            </div>`;
+        } else {
+            html += '<div class="trx-list">';
+            [...filtered].reverse().forEach((r, i) => {
+                html += renderKartu(r, 'kartu-' + i);
+            });
+            html += '</div>';
+        }
+
+        mainContent.innerHTML = html;
+
+        // Restore expand state
+        expandedCards.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('open');
+        });
+    }
+
+    // ===== RENDER KARTU =====
+    function renderKartu(r, id) {
+        const tanggal = r[COL.waktu]    || '';
+        const nama    = r[COL.nama]     || 'Umum';
+        const layanan = r[COL.layanan]  || '-';
+        const qty     = r[COL.qty]      || 0;
+        const total   = parseFloat(r[COL.total])   || 0;
+        const deposit = parseFloat(r[COL.deposit]) || 0;
+        const sisa    = parseFloat(r[COL.sisa])    || 0;
+        const catatan = r[COL.catatan]  || '';
+
+        // ---- Hitung status deposit ----
+        const selisih = deposit - total;
+        const adaDeposit = deposit > 0;
+
+        let statusBadge, depositBox;
+        if (!adaDeposit) {
+            // Tidak ada deposit — tidak perlu status apapun
+            statusBadge = ``;
+            depositBox  = ``;   // tidak ada box sama sekali
+        } else if (selisih > 0) {
+            statusBadge = `<span class="status-badge sisa-dp">💰 Sisa DP</span>`;
+            depositBox  = `<div class="deposit-box sisa-dp">
+                <div class="db-icon">💰</div>
+                <div class="db-text">
+                    <div class="db-label">Sisa Deposit Pelanggan</div>
+                    <div class="db-amount">${formatRupiah(selisih)}</div>
+                </div>
+            </div>`;
+        } else if (selisih < 0) {
+            const kurang = Math.abs(selisih);
+            statusBadge = `<span class="status-badge kurang">⚠️ Kurang Bayar</span>`;
+            depositBox  = `<div class="deposit-box kurang">
+                <div class="db-icon">⚠️</div>
+                <div class="db-text">
+                    <div class="db-label">Pelanggan Masih Kurang</div>
+                    <div class="db-amount">${formatRupiah(kurang)}</div>
+                </div>
+            </div>`;
+        } else {
+            statusBadge = `<span class="status-badge lunas">✓ Lunas</span>`;
+            depositBox  = `<div class="deposit-box lunas">
+                <div class="db-icon">✅</div>
+                <div class="db-text">
+                    <div class="db-label">Deposit Pas / Lunas</div>
+                    <div class="db-amount">${formatRupiah(deposit)}</div>
+                </div>
+            </div>`;
+        }
+
+        // Sub-info di header (layanan + tanggal)
+        const subInfo = `${layanan} · ${formatTanggal(tanggal)}`;
+
+        // Harga sekilas di header (tanpa expand)
+        let hargaHeader, hargaClass;
+        if (deposit === 0) {
+            // Tidak ada deposit → tampilkan total harga saja
+            hargaHeader = formatRupiah(total);
+            hargaClass  = 'normal';
+        } else if (selisih > 0) {
+            hargaHeader = 'Sisa ' + formatRupiah(selisih);
+            hargaClass  = 'sisa-dp';
+        } else if (selisih < 0) {
+            hargaHeader = 'Kurang ' + formatRupiah(Math.abs(selisih));
+            hargaClass  = 'kurang';
+        } else {
+            hargaHeader = formatRupiah(total);
+            hargaClass  = 'normal';
+        }
+
+        // Catatan opsional
+        const catatanHtml = catatan && catatan.toString().trim()
+            ? `<div class="trx-note">📝 ${catatan}</div>` : '';
+
+        return `
+        <div class="trx-card" id="${id}">
+            <div class="trx-card-header" onclick="toggleKartu('${id}')">
+                <div class="trx-left">
+                    <div class="trx-nama">${nama}</div>
+                    <div class="trx-sub">${subInfo}</div>
+                </div>
+                <div class="trx-right">
+                    <div class="trx-harga-header ${hargaClass}">${hargaHeader}</div>
+                    ${statusBadge}
+                    <div class="chevron">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="trx-detail">
+                <div class="trx-detail-inner">
+                    <table class="detail-table">
+                        <tr>
+                            <td>📅 Waktu</td>
+                            <td>${formatTanggal(tanggal)}</td>
+                        </tr>
+                        <tr>
+                            <td>🧺 Layanan</td>
+                            <td><span class="chip">${layanan}</span></td>
+                        </tr>
+                        <tr>
+                            <td>📦 Total Qty</td>
+                            <td>${qty} pcs</td>
+                        </tr>
+                        <tr>
+                            <td>🏷️ Total Jasa</td>
+                            <td>${formatRupiah(total)}</td>
+                        </tr>
+                        <tr>
+                            <td>💵 Deposit / DP</td>
+                            <td>${deposit > 0 ? formatRupiah(deposit) : '—'}</td>
+                        </tr>
+                        ${adaDeposit && sisa > 0 ? `<tr>
+                            <td>📋 Sisa Bayar</td>
+                            <td style="color:var(--warning); font-weight:800;">${formatRupiah(sisa)}</td>
+                        </tr>` : ''}
+                        ${adaDeposit ? `<tr class="detail-total">
+                            <td>Selisih (DP − Jasa)</td>
+                            <td style="color:${selisih >= 0 ? 'var(--success)' : 'var(--danger)'};">
+                                ${selisih >= 0 ? '+' : ''}${formatRupiah(selisih)}
+                            </td>
+                        </tr>` : `<tr class="detail-total">
+                            <td>Total Harga</td>
+                            <td style="color:var(--primary);">${formatRupiah(total)}</td>
+                        </tr>`}
+                    </table>
+                    ${adaDeposit ? depositBox : `<div class="deposit-box" style="background:#f0f4f8; border:1px solid var(--border);">
+                        <div class="db-icon">🧾</div>
+                        <div class="db-text">
+                            <div class="db-amount" style="color:var(--text);">${formatRupiah(total)}</div>
+                        </div>
+                    </div>`}
+                    ${catatanHtml}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    let searchTimer = null;
+    function debounceSearch(val) {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            querySearch = val;
+            expandedCards.clear();
+            renderHalaman();
+            // Kembalikan fokus ke input setelah re-render
+            const inp = document.querySelector('.search-box input');
+            if (inp) {
+                inp.focus();
+                // Pindahkan kursor ke akhir
+                const len = inp.value.length;
+                inp.setSelectionRange(len, len);
+            }
+        }, 400);
+    }
+    function cariData(val) {
+        querySearch = val;
+        expandedCards.clear();
+        renderHalaman();
+    }
+
+    function tampilkanError(pesan, detail) {
+        document.getElementById('headerSubtitle').textContent = 'Gagal memuat data';
+        document.getElementById('mainContent').innerHTML = `
+            <div class="error-box">
+                <p>⚠️ ${pesan}</p>
+                <small>${detail || ''}</small>
+            </div>
+            <div class="setup-card">
+                <h3>⚙️ Cara Setup Viewer Ini</h3>
+                <p style="font-size:12px; color:#555; margin-bottom:10px;">
+                    Tambahkan fungsi <code>doGet()</code> ke Google Apps Script kamu,
+                    lalu deploy ulang. Lihat file <b>PETUNJUK_SETUP.txt</b> untuk kode lengkapnya.
+                </p>
+                <ol>
+                    <li>Buka Google Apps Script</li>
+                    <li>Tambahkan kode <code>doGet()</code> dari petunjuk</li>
+                    <li>Deploy ulang sebagai Web App (akses: <b>Anyone</b>)</li>
+                    <li>Tekan tombol <b>Muat Ulang</b> di halaman ini</li>
+                </ol>
+            </div>`;
+    }
+
+    // ===== INIT =====
+    muatUlangData();
+</script>
+</body>
+</html>
